@@ -15,14 +15,10 @@ public class Grid {
 
   @Id @GeneratedValue private Long id;
 
-  @Column private String name;
-
   @Column(name = "game_id")
   private Long gameId;
 
-  @Column(name = "x_dimension")
-  private Integer xDimension;
+  @Column private Integer rows;
 
-  @Column(name = "y_dimension")
-  private Integer yDimension;
+  @Column private Integer columns;
 }

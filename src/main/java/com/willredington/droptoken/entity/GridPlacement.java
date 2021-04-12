@@ -20,6 +20,9 @@ public class GridPlacement {
   @Column(name = "grid_id")
   private Long gridId;
 
+  @Column(name = "player_id")
+  private Long playerId;
+
   @Column private Integer x;
 
   @Column private Integer y;

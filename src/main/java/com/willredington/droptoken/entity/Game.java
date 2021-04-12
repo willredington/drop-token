@@ -16,8 +16,6 @@ public class Game {
 
   @Id @GeneratedValue private Long id;
 
-  @Column private String name;
-
   @Column
   @Enumerated(EnumType.ORDINAL)
   private Status status;
