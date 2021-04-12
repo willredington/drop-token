@@ -15,15 +15,13 @@ public class GridPlacement {
 
   @Id @GeneratedValue private Long id;
 
-  @Column private String name;
-
   @Column(name = "grid_id")
   private Long gridId;
 
   @Column(name = "player_id")
   private Long playerId;
 
-  @Column private Integer x;
+  @Column private Integer column;
 
-  @Column private Integer y;
+  @Column private Integer row;
 }

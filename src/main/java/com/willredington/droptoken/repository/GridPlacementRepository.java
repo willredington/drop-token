@@ -8,4 +8,6 @@ import java.util.List;
 public interface GridPlacementRepository extends JpaRepository<GridPlacement, Long> {
 
   List<GridPlacement> findAllByGridIdEquals(Long gridId);
+
+  boolean existsByGridIdEqualsAndColumnEqualsAndRowEquals(Long gridId, int column, int row);
 }

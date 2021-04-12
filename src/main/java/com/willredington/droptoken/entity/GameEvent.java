@@ -11,7 +11,7 @@ import javax.persistence.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "game")
+@Table(name = "game_event")
 public class GameEvent {
 
   @Id @GeneratedValue private Long id;
@@ -25,4 +25,8 @@ public class GameEvent {
   @Column
   @Enumerated(EnumType.ORDINAL)
   private Event event;
+
+  @Column private Integer column;
+
+  @Column private Integer row;
 }
