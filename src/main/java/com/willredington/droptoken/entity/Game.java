@@ -1,25 +1,29 @@
 package com.willredington.droptoken.entity;
 
 import com.willredington.droptoken.type.Status;
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.*;
+import java.util.List;
 
-@Entity
+@Data
 @Builder
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Table(name = "game")
+@Document
 public class Game {
 
-  @Id @GeneratedValue private Long id;
+  @Id private String id;
 
-  @Column
-  @Enumerated(EnumType.ORDINAL)
   private Status status;
 
-  @Column(name = "winning_player_id")
-  private Long winningPlayerId;
+  private String winner;
+
+  private String[][] board;
+
+  private List<String> players;
+
+  private Integer rows;
+
+  private Integer columns;
 }

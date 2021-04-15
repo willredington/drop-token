@@ -1,53 +1,54 @@
 package com.willredington.droptoken.service.impl;
 
-import com.willredington.droptoken.dto.CreateGameDto;
+import com.willredington.droptoken.dto.CreateGameRequest;
 import com.willredington.droptoken.entity.Game;
-import com.willredington.droptoken.entity.GamePlayer;
-import com.willredington.droptoken.entity.Grid;
-import com.willredington.droptoken.entity.Player;
-import com.willredington.droptoken.repository.GamePlayerRepository;
+import com.willredington.droptoken.exception.NotFoundException;
 import com.willredington.droptoken.repository.GameRepository;
-import com.willredington.droptoken.repository.GridRepository;
+import com.willredington.droptoken.service.GridValidator;
 import com.willredington.droptoken.type.Status;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class GameServiceImpl {
 
-  private final PlayerServiceImpl playerService;
   private final GameRepository gameRepository;
-  private final GridRepository gridRepository;
-  private final GamePlayerRepository gamePlayerRepository;
+  private final List<GridValidator> gridValidators;
 
-  public GameServiceImpl(
-      PlayerServiceImpl playerService,
-      GameRepository gameRepository,
-      GridRepository gridRepository,
-      GamePlayerRepository gamePlayerRepository) {
-    this.playerService = playerService;
+  public GameServiceImpl(GameRepository gameRepository, List<GridValidator> gridValidators) {
     this.gameRepository = gameRepository;
-    this.gridRepository = gridRepository;
-    this.gamePlayerRepository = gamePlayerRepository;
+    this.gridValidators = gridValidators;
   }
 
-  private void assignPlayer(Long gameId, Long playerId) {
-    gamePlayerRepository.save(GamePlayer.builder().gameId(gameId).playerId(playerId).build());
+  public Game create(CreateGameRequest dto) {
+    return gameRepository.save(
+        Game.builder()
+            .columns(dto.getColumns())
+            .rows(dto.getRows())
+            .players(dto.getPlayerNames())
+            .status(Status.IDLE)
+            .board(new String[dto.getRows()][dto.getColumns()])
+            .build());
   }
 
-  public Game createGame(CreateGameDto dto) {
+  public void checkWinner(String gameId) {
 
-    Game game = gameRepository.save(Game.builder().status(Status.IDLE).build());
+    Game game = gameRepository.findById(gameId).orElseThrow(NotFoundException::new);
 
-    gridRepository.save(
-        Grid.builder().gameId(game.getId()).rows(dto.getRows()).columns(dto.getColumns()).build());
+    for (GridValidator gridValidator : gridValidators) {
 
-    for (String playerName : dto.getPlayerNames()) {
-      Player player = playerService.getOrCreate(playerName);
-      assignPlayer(game.getId(), player.getId());
+      Optional<String> winnerOpt = gridValidator.findWinner(game);
+
+      if (winnerOpt.isPresent()) {
+        String winner = winnerOpt.get();
+        log.info("found winner: {}", winner);
+        // TODO: update game
+        // stop iteration
+      }
     }
-
-    return game;
   }
 }

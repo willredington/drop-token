@@ -1,32 +1,25 @@
 package com.willredington.droptoken.entity;
 
 import com.willredington.droptoken.type.Event;
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.persistence.*;
+import java.util.Map;
 
-@Entity
+@Data
 @Builder
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Table(name = "game_event")
+@Document
 public class GameEvent {
 
-  @Id @GeneratedValue private Long id;
+  @Id private String id;
 
-  @Column(name = "game_id")
-  private Long gameId;
+  private Event type;
 
-  @Column(name = "player_id")
-  private Long playerId;
+  private String playerId;
 
-  @Column
-  @Enumerated(EnumType.ORDINAL)
-  private Event event;
+  private String gameId;
 
-  @Column private Integer column;
-
-  @Column private Integer row;
+  private Map<String, Object> properties;
 }

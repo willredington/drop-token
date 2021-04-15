@@ -5,13 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class PlayerMoveDto {
-
-  private Long gameId;
-
-  private Long playerId;
+public class PlayerMoveRequest {
 
   private Integer column;
-
-  private Integer row;
 }

@@ -8,7 +8,7 @@ import java.util.List;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CreateGameDto {
+public class CreateGameRequest {
 
   @JsonProperty("players")
   private List<String> playerNames;

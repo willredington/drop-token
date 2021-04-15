@@ -1,9 +1,12 @@
 package com.willredington.droptoken.repository;
 
 import com.willredington.droptoken.entity.Game;
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.willredington.droptoken.type.Status;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface GameRepository extends JpaRepository<Game, Long> {
+import java.util.List;
 
-  boolean existsByIdEquals(Long gameId);
+public interface GameRepository extends MongoRepository<Game, String> {
+
+  List<Game> findAllByStatusEquals(Status status);
 }
