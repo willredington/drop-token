@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,38 +23,29 @@ public class DiagonalGridValidatorImpl implements GridValidator {
   public Optional<String> findWinner(Game game) {
 
     String[][] board = game.getBoard();
-    List<String> diagonal = new ArrayList<>();
+    List<String> diagonal1 = new ArrayList<>();
+    List<String> diagonal2 = new ArrayList<>();
 
-    // left to right
     for (int rowNum = 0; rowNum < game.getRows(); rowNum++) {
 
       for (int colNum = 0; colNum < game.getColumns(); colNum++) {
 
+        int oppositeRow = game.getRows() - rowNum - 1;
+
+        String topBottomValue = board[rowNum][colNum];
+        String bottomTopValue = board[oppositeRow][colNum];
+
         if (rowNum == colNum) {
-          diagonal.add(board[rowNum][colNum]);
+          diagonal1.add(topBottomValue);
+          diagonal2.add(bottomTopValue);
         }
       }
     }
 
-    if (checkList(diagonal)) {
-      return Optional.of(diagonal.get(0));
-    }
-
-    diagonal = new ArrayList<>();
-
-    // right to left
-    for (int rowNum = game.getRows() - 1; rowNum > -1; rowNum--) {
-
-      for (int colNum = 0; colNum > -1; colNum--) {
-
-        if (rowNum == colNum) {
-          diagonal.add(board[rowNum][colNum]);
-        }
+    for (List<String> diagonal : Arrays.asList(diagonal1, diagonal2)) {
+      if (checkList(diagonal) && diagonal.size() == game.getColumns()) {
+        return Optional.of(diagonal.get(0));
       }
-    }
-
-    if (checkList(diagonal)) {
-      return Optional.of(diagonal.get(0));
     }
 
     return Optional.empty();
