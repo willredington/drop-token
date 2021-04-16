@@ -6,6 +6,8 @@ import com.willredington.droptoken.entity.GameEvent;
 import com.willredington.droptoken.exception.GameStatusException;
 import com.willredington.droptoken.exception.InvalidPlacementException;
 import com.willredington.droptoken.exception.NotFoundException;
+import com.willredington.droptoken.exception.PlayerTurnException;
+import com.willredington.droptoken.repository.GameEventRepository;
 import com.willredington.droptoken.repository.GameRepository;
 import com.willredington.droptoken.service.GridValidator;
 import com.willredington.droptoken.type.Status;
@@ -22,14 +24,17 @@ public class GameServiceImpl {
   private final GameRepository gameRepository;
   private final List<GridValidator> gridValidators;
   private final GameEventServiceImpl gameEventService;
+  private final GameEventRepository gameEventRepository;
 
   public GameServiceImpl(
       GameRepository gameRepository,
       List<GridValidator> gridValidators,
-      GameEventServiceImpl gameEventService) {
+      GameEventServiceImpl gameEventService,
+      GameEventRepository gameEventRepository) {
     this.gameRepository = gameRepository;
     this.gridValidators = gridValidators;
     this.gameEventService = gameEventService;
+    this.gameEventRepository = gameEventRepository;
   }
 
   private String[][] createEmptyBoard(int rows, int cols) {
@@ -45,20 +50,51 @@ public class GameServiceImpl {
     return board;
   }
 
-  private boolean isBoardFull(Game game) {
+  private boolean isPlayersTurn(Game game, String playerId) {
 
-    String[][] board = game.getBoard();
-
-    for (int r = 0; r < game.getRows(); r++) {
-
-      for (int c = 0; c < game.getColumns(); c++) {
-        if (board[r][c].equals("")) {
-          return false;
-        }
-      }
+    if (!game.getPlayers().contains(playerId)) {
+      throw new NotFoundException(String.format("player %s not associated with game", playerId));
     }
 
-    return true;
+    List<GameEvent> gameEvents = gameEventRepository.findAllByGameIdEquals(game.getId());
+
+    // if we don't have any events, make sure the player is the first player
+    if (gameEvents.isEmpty()) {
+      return !game.getPlayers().isEmpty() && game.getPlayers().get(0).equals(playerId);
+    }
+
+    // make sure the last event wasn't by the incoming player
+    GameEvent lastEvent = gameEvents.get(gameEvents.size() - 1);
+
+    return !lastEvent.getPlayerId().equals(playerId);
+  }
+
+  public void checkBoardFull(String gameId) {
+
+    Game game = gameRepository.findById(gameId).orElseThrow(NotFoundException::new);
+
+    if (game.getStatus() != Status.COMPLETE) {
+
+      boolean isFull = true;
+
+      String[][] board = game.getBoard();
+
+      for (int r = 0; r < game.getRows(); r++) {
+
+        for (int c = 0; c < game.getColumns(); c++) {
+
+          if (board[r][c].equals("")) {
+            isFull = false;
+            break;
+          }
+        }
+      }
+
+      if (isFull) {
+        game.setStatus(Status.COMPLETE);
+        gameRepository.save(game);
+      }
+    }
   }
 
   public Game create(CreateGameRequest dto) {
@@ -67,7 +103,7 @@ public class GameServiceImpl {
             .columns(dto.getColumns())
             .rows(dto.getRows())
             .players(dto.getPlayerNames())
-            .status(Status.IDLE)
+            .status(Status.IN_PROGRESS)
             .board(createEmptyBoard(dto.getRows(), dto.getColumns()))
             .build());
   }
@@ -78,6 +114,10 @@ public class GameServiceImpl {
 
     if (game.getStatus() == Status.COMPLETE) {
       throw new GameStatusException("game is already complete");
+    }
+
+    if (!isPlayersTurn(game, playerId)) {
+      throw new PlayerTurnException("not players' turn");
     }
 
     if (column < 0 || column >= game.getColumns()) {
@@ -93,14 +133,6 @@ public class GameServiceImpl {
       if (cellValue.equals("")) {
 
         board[rowNum][column] = playerId;
-
-        if (game.getStatus() != Status.IN_PROGRESS) {
-          game.setStatus(Status.IN_PROGRESS);
-        }
-
-        if (isBoardFull(game)) {
-          game.setStatus(Status.COMPLETE);
-        }
 
         game.setBoard(board);
         gameRepository.save(game);

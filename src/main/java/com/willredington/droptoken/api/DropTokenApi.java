@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -51,18 +52,19 @@ public class DropTokenApi {
   }
 
   @GetMapping(value = "drop_token/{gameId}")
-  public Game status(@PathVariable String gameId) {
+  public Game getGame(@PathVariable String gameId) {
     return gameRepository.findById(gameId).orElseThrow(NotFoundException::new);
   }
 
   @PostMapping(value = "drop_token/{gameId}/{playerId}")
-  public PlayerMoveResponse move(
+  public PlayerMoveResponse createMove(
       @PathVariable String gameId,
       @PathVariable String playerId,
       @RequestBody PlayerMoveRequest request) {
 
     GameEvent moveEvent = gameService.move(gameId, playerId, request.getColumn());
     gameService.checkWinner(gameId);
+    gameService.checkBoardFull(gameId);
 
     return PlayerMoveResponse.builder()
         .move(String.format("%s/moves/%s", gameId, moveEvent.getId()))
@@ -70,19 +72,35 @@ public class DropTokenApi {
   }
 
   @GetMapping(value = "drop_token/{gameId}/moves/{moveId}")
-  public GameEvent move(@PathVariable String gameId, @PathVariable String moveId) {
+  public GameEvent getMove(@PathVariable String gameId, @PathVariable String moveId) {
+
+    if (!gameRepository.existsByIdEquals(gameId)) {
+      throw new NotFoundException(String.format("game %s does not exist", gameId));
+    }
+
     return gameEventRepository.findById(moveId).orElseThrow(NotFoundException::new);
   }
 
   @GetMapping(value = "drop_token/{gameId}/moves")
-  public List<GameEvent> move(@PathVariable String gameId) {
-    return gameEventRepository.findAllByGameIdEquals(gameId);
+  public ListMovesResponse listMoves(
+      @PathVariable String gameId,
+      @RequestParam(required = false) Integer start,
+      @RequestParam(required = false) Integer until) {
+
+    List<GameEvent> allMoves = gameEventRepository.findAllByGameIdEquals(gameId);
+
+    if (Objects.nonNull(start) && Objects.nonNull(until)) {
+      return ListMovesResponse.builder().moves(allMoves.subList(start, until)).build();
+    }
+
+    return ListMovesResponse.builder().moves(allMoves).build();
   }
 
   @DeleteMapping(value = "drop_token/{gameId}/{playerId}")
   public ResponseEntity<?> removePlayer(
       @PathVariable String gameId, @PathVariable String playerId) {
     gameService.removePlayer(gameId, playerId);
+    gameService.checkWinner(gameId);
     return ResponseEntity.status(HttpStatus.ACCEPTED).build();
   }
 }
