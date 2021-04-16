@@ -27,4 +27,9 @@ public class GameEventServiceImpl {
             .properties(Collections.singletonMap("column", column))
             .build());
   }
+
+  public GameEvent createQuitEvent(String gameId, String playerId) {
+    return gameEventRepository.save(
+        GameEvent.builder().type(Event.QUIT).playerId(playerId).gameId(gameId).build());
+  }
 }

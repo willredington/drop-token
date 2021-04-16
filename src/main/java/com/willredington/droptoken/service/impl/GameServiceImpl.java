@@ -132,4 +132,30 @@ public class GameServiceImpl {
       }
     }
   }
+
+  public void removePlayer(String gameId, String playerId) {
+
+    Game game = gameRepository.findById(gameId).orElseThrow(NotFoundException::new);
+
+    if (game.getStatus() == Status.COMPLETE) {
+      throw new GameStatusException("game is already complete");
+    }
+
+    if (!game.getPlayers().contains(playerId)) {
+      throw new NotFoundException("player not apart of game");
+    }
+
+    List<String> players = game.getPlayers();
+    players.remove(playerId);
+
+    game.setPlayers(players);
+
+    if (players.size() == 1) {
+      game.setStatus(Status.COMPLETE);
+      game.setWinner(players.get(0));
+    }
+
+    gameRepository.save(game);
+    gameEventService.createQuitEvent(gameId, playerId);
+  }
 }

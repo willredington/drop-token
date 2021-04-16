@@ -9,6 +9,8 @@ import com.willredington.droptoken.repository.GameRepository;
 import com.willredington.droptoken.service.impl.GameServiceImpl;
 import com.willredington.droptoken.type.Status;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -75,5 +77,12 @@ public class DropTokenApi {
   @GetMapping(value = "drop_token/{gameId}/moves")
   public List<GameEvent> move(@PathVariable String gameId) {
     return gameEventRepository.findAllByGameIdEquals(gameId);
+  }
+
+  @DeleteMapping(value = "drop_token/{gameId}/{playerId}")
+  public ResponseEntity<?> removePlayer(
+      @PathVariable String gameId, @PathVariable String playerId) {
+    gameService.removePlayer(gameId, playerId);
+    return ResponseEntity.status(HttpStatus.ACCEPTED).build();
   }
 }
