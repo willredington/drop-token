@@ -126,6 +126,7 @@ public class GameServiceImpl {
 
     String[][] board = game.getBoard();
 
+    // find the first empty cell
     for (int rowNum = game.getRows() - 1; rowNum > -1; rowNum--) {
 
       String cellValue = board[rowNum][column];
